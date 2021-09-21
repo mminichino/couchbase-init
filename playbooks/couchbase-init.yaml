@@ -1,0 +1,21 @@
+---
+#
+# var:cb_user
+# var:cb_pass
+# var:cb_name
+# var:bucket_create
+# var:bucket
+# var:data_dir
+# var:index_dir
+# var:analytics_dir
+# var:eventing_dir
+# var:query
+# var:domain
+# var:services
+# var:user_name
+#
+- name: Create Couchbase Cluster
+  hosts: all
+  gather_facts: no
+  roles:
+    - couchbase-init

@@ -1,0 +1,14 @@
+---
+# tasks file for couchbase-init
+- set_fact:
+    host_fqdn: "{{ inventory_hostname + '.' + domain_name }}"
+  when: domain_name is defined and inventory_hostname == first_host
+- name: Rebalance Cluster
+  shell:
+    cmd: |
+      /opt/couchbase/bin/couchbase-cli rebalance \
+        --cluster {{ host_fqdn }} \
+        --username {{ couchbase_user | default('Administrator') }} \
+        --password '{{ couchbase_pass | default('password') }}' \
+        --no-progress-bar
+  when: inventory_hostname == first_host

@@ -1,0 +1,17 @@
+iansible_host_key_checking: False
+ansible_user: "{{ user_name if user_name is defined else 'admin' }}"
+ansible_password: "{{ ask_password if ask_password is defined else lookup('vars',password_var) if password_var is defined else None }}"
+domain_name: "{{ domain if domain is defined else None }}"
+service_list: "{{ services.split(',') if services is defined else ['data','index','query'] }}"
+couchbase_user: "{{ cb_user if cb_user is defined else 'Administrator' }}"
+couchbase_pass: "{{ cb_pass if cb_pass is defined else 'password' }}"
+cluster_name: "{{ cb_name if cb_name is defined else 'perfdb' }}"
+create_bucket: "{{ bucket_create if bucket_create is defined else 'true'|bool }}"
+bucket_name: "{{ bucket if bucket is defined else 'default' }}"
+cluster_port: 8091
+data_path: "{{ data_dir if data_dir is defined else '/opt/couchbase/var/lib/couchbase/data' }}"
+index_path: "{{ index_dir if index_dir is defined else '/opt/couchbase/var/lib/couchbase/data' }}"
+analytics_path: "{{ analytics_dir if analytics_dir is defined else '/opt/couchbase/var/lib/couchbase/data' }}"
+eventing_path: "{{ eventing_dir if eventing_dir is defined else '/opt/couchbase/var/lib/couchbase/data' }}" 
+run_query: "{{ 'true'|bool if query is defined else 'false'|bool }}"
+query_text: "{{ query if query is defined else None }}"

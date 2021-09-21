@@ -1,0 +1,49 @@
+---
+# tasks file for couchbase-init
+- set_fact:
+    host_fqdn: "{{ inventory_hostname }}.{{ domain_name }}"
+  when: domain_name is defined and inventory_hostname != first_host
+- set_fact:
+    add_hostname: "{% if host_fqdn is defined %}{{ host_fqdn }}{% else %}{{ inventory_hostname }}{% endif %}"
+  when: inventory_hostname != first_host
+- name: Initialize the Node
+  shell:
+    cmd: |
+      if /opt/couchbase/bin/couchbase-cli host-list \
+        --cluster {{ first_host }} \
+        --username {{ couchbase_user | default('Administrator') }} \
+        --password '{{ couchbase_pass | default('password') }}' | \
+        grep -q '{{ add_hostname }}'; then
+          echo "The node already exists in the cluster"
+      else
+        /opt/couchbase/bin/couchbase-cli node-init \
+          --cluster {{ add_hostname }} \
+          --username {{ couchbase_user | default('Administrator') }} \
+          --password '{{ couchbase_pass | default('password') }}' \
+          --node-init-hostname '{{ add_hostname }}' \
+          --node-init-data-path '{{ data_path }}' \
+          --node-init-index-path '{{ index_path }}' \
+          --node-init-analytics-path '{{ analytics_path }}' \
+          --node-init-eventing-path '{{ eventing_path }}'
+      fi
+  when: inventory_hostname != first_host
+- name: Add Remaining Nodes
+  shell:
+    cmd: |
+      if /opt/couchbase/bin/couchbase-cli host-list \
+        --cluster {{ first_host }} \
+        --username {{ couchbase_security.admin_user | default('Administrator') }} \
+        --password '{{ couchbase_security.admin_password | default('password') }}' | \
+        grep -q '{{ add_hostname }}'; then
+          echo "The node already exists in the cluster"
+      else
+        /opt/couchbase/bin/couchbase-cli server-add \
+          --cluster {{ first_host }} \
+          --username {{ couchbase_user | default('Administrator') }} \
+          --password '{{ couchbase_pass | default('password') }}' \
+          --server-add-username {{ couchbase_user | default('Administrator') }} \
+          --server-add-password '{{ couchbase_pass | default('password') }}' \
+          --server-add {{ add_hostname }} \
+          --services '{{ service_list | join(',') }}'
+        fi
+  when: inventory_hostname != first_host

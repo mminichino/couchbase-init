@@ -1,0 +1,34 @@
+---
+# tasks file for couchbase-init
+- set_fact:
+    host_fqdn: "{{ inventory_hostname + '.' + domain_name }}"
+  when: domain_name is defined and inventory_hostname == first_host
+- name: Create Bucket
+  shell:
+    cmd: |
+      if /opt/couchbase/bin/couchbase-cli bucket-list \
+        --cluster {{ host_fqdn }} \
+        --username {{ couchbase_user | default('Administrator') }} \
+        --password '{{ couchbase_pass | default('password') }}' | \
+        grep -q '{{ bucket_name }}'; then
+          echo "The bucket already exists"
+      else
+        /opt/couchbase/bin/couchbase-cli bucket-create \
+          --cluster {{ host_fqdn }} \
+          --username {{ couchbase_user | default('Administrator') }} \
+          --password '{{ couchbase_pass | default('password') }}' \
+          --bucket {{ bucket_name | default('default') }} \
+          --bucket-type {{ bucket_type | default('couchbase') }} \
+          --bucket-ramsize {{ data_mem | default(100) }} \
+          --bucket-replica {{ bucket_replicas | default(1) }} \
+          --bucket-priority {{ bucket_priority | default('high') }} \
+          --bucket-eviction-policy {{ bucket_eviction_policy | default('valueOnly') }} \
+          --conflict-resolution {{ bucket_conflict_resolution | default('sequence') }} \
+          --enable-flush {{ bucket_flush | default(false) | int }} \
+          --durability-min-level {{ bucket_durability_min_level | default('none') }} \
+          --compression-mode {{ bucket_compression_mode | default('passive') }} \
+          --max-ttl {{ bucket_max_ttl | default(0) }} \
+          --enable-index-replica {{ bucket_enable_index_replica | default(false) | int }} \
+          --wait
+        fi
+  when: first_host == inventory_hostname

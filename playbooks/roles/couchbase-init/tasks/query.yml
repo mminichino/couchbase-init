@@ -1,0 +1,17 @@
+---
+# tasks file for couchbase-init
+- set_fact:
+    host_fqdn: "{{ inventory_hostname }}.{{ domain_name }}"
+  when: domain_name is defined and inventory_hostname == first_host
+- set_fact:
+    cluster_url: "http://{% if host_fqdn is defined %}{{ host_fqdn }}{% else %}{{ inventory_hostname }}{% endif %}:8091"
+  when: inventory_hostname == first_host
+- name: Run Query
+  shell:
+    cmd: |
+      /opt/couchbase/bin/cbq \
+        -e {{ cluster_url }} \
+        -u {{ couchbase_user | default('Administrator') }} \
+        -p '{{ couchbase_pass | default('password') }}' \
+        --script='{{ query_text }}'
+  when: inventory_hostname == first_host

@@ -1,0 +1,58 @@
+---
+# tasks file for couchbase-init
+- set_fact:
+    host_fqdn: "{{ inventory_hostname }}.{{ domain_name }}"
+  when: domain_name is defined
+  run_once: true
+- set_fact:
+    rally_point_hostname: "{% if host_fqdn is defined %}{{ host_fqdn }}{% else %}{{ inventory_hostname }}{% endif %}"
+  run_once: true
+- name: Initialize the Node
+  shell:
+    cmd: |
+      if /opt/couchbase/bin/couchbase-cli host-list \
+        --cluster {{ rally_point_hostname }} \
+        --username {{ couchbase_user | default('Administrator') }} \
+        --password '{{ couchbase_pass | default('password') }}' | \
+        grep -q '{{ rally_point_hostname }}'; then
+          echo "The node already exists in the cluster"
+      else
+        /opt/couchbase/bin/couchbase-cli node-init \
+          --cluster {{ rally_point_hostname }} \
+          --username {{ couchbase_user | default('Administrator') }} \
+          --password '{{ couchbase_pass | default('password') }}' \
+          --node-init-hostname '{{ rally_point_hostname }}' \
+          --node-init-data-path '{{ data_path }}' \
+          --node-init-index-path '{{ index_path }}' \
+          --node-init-analytics-path '{{ analytics_path }}' \
+          --node-init-eventing-path '{{ eventing_path }}'
+      fi
+  run_once: true
+- name: Initialize the Cluster
+  shell:
+    cmd: |
+      if /opt/couchbase/bin/couchbase-cli setting-cluster \
+        --cluster {{ rally_point_hostname }} \
+        --username {{ couchbase_user | default('Administrator') }} \
+        --password '{{ couchbase_pass | default('password') }}' | \
+        grep -q 'ERROR: Cluster is not initialized'; then
+        /opt/couchbase/bin/couchbase-cli cluster-init \
+          --cluster {{ rally_point_hostname }} \
+          --cluster-username {{ couchbase_user | default('Administrator') }} \
+          --cluster-password '{{ couchbase_pass | default('password') }}' \
+          --cluster-port {{ cluster_port }} \
+          --cluster-ramsize {{ data_mem | default(1024) }} \
+          --cluster-fts-ramsize {{ fts_mem | default(256) }} \
+          --cluster-index-ramsize {{ index_mem | default(256) }} \
+          --cluster-eventing-ramsize {{ eventing_mem | default(256) }} \
+          --cluster-analytics-ramsize {{ analytics_mem | default(1024) }} \
+          --cluster-name '{{ cluster_name | default('pocdb') }}' \
+          --index-storage-setting {{ index_storage | default('default') }} \
+          --services '{{ service_list | join(',') }}'
+      else
+        echo "Already initialized"
+      fi
+  run_once: true
+- set_fact:
+    first_host: "{{ inventory_hostname }}"
+  run_once: true

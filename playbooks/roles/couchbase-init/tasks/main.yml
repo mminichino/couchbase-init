@@ -1,0 +1,39 @@
+---
+# tasks file for couchbase-init
+- name: Get host memory
+  shell: free -m | awk 'NR==2 {print $2}'
+  register: host_mem_result
+- set_fact:
+    host_mem: "{{ host_mem_result.stdout }}"
+- set_fact:
+    host_mem: "{{ host_mem|int - 256 }}"
+    eventing_mem: 256
+  when: '"eventing" in service_list'
+- set_fact:
+    analytics_mem: "{{ (host_mem|int * 0.2) | round | int }}"
+  when: '"analytics" in service_list'
+- set_fact:
+    host_mem: "{{ host_mem|int - analytics_mem|int }}"
+  when: '"analytics" in service_list'
+- set_fact:
+    host_mem: "{{ host_mem|int - 512 }}" 
+    fts_mem: 512
+  when: '"fts" in service_list'
+- set_fact:
+    host_mem: "{{ host_mem|int - 512 }}" 
+    index_mem: 512
+  when: '"index" in service_list'
+- set_fact:
+    data_mem: "{{ (host_mem|int * 0.65) | round | int }}"
+- name: Initialize Cluster
+  include: init.yml
+- name: Add Nodes to Cluster
+  include: add.yml
+- name: Rebalance Cluster
+  include: rebalance.yml
+- name: Add Bucket
+  include: bucket.yml
+  when: create_bucket|bool == true
+- name: Run Query
+  include: query.yml
+  when: run_query|bool == true
