@@ -45,24 +45,38 @@ class dynamicInventory(object):
             }
         ]
 
-        ip_result = dns.resolver.query(hostname, 'A')
-        arpa_result = dns.reversename.from_address(ip_result[0].to_text())
-        fqdn_result = dns.resolver.query(arpa_result, 'PTR')
-        host_fqdn = fqdn_result[0].to_text()
-        domain_name = host_fqdn.split('.',1)[1].rstrip('.')
+        try:
+            ip_result = dns.resolver.query(hostname, 'A')
+            arpa_result = dns.reversename.from_address(ip_result[0].to_text())
+            fqdn_result = dns.resolver.query(arpa_result, 'PTR')
+            host_fqdn = fqdn_result[0].to_text()
+            domain_name = host_fqdn.split('.',1)[1].rstrip('.')
 
-        inventoryJson['lab']['vars']['domain'] = domain_name
+            inventoryJson['lab']['vars']['domain'] = domain_name
+        except dns.resolver.NXDOMAIN:
+            pass
 
-        ec2 = boto3.resource('ec2')
-        instances = ec2.instances.filter(Filters=filters)
+        try:
+            if os.environ['AWS_DEFAULT_REGION']:
+                inventoryJson['lab']['vars']['region'] = os.environ['AWS_DEFAULT_REGION']
+        except KeyError:
+            print("Please set the AWS_DEFAULT_REGION environment variable.")
+            sys.exit(1)
 
-        instanceTags = []
-        for instance in instances:
-            instanceId = instance.id
-            instanceJson = {'Id': instanceId}
-            for tags in instance.tags:
-                instanceJson[tags["Key"]] = tags["Value"]
-            instanceTags.append(instanceJson)
+        try:
+            ec2 = boto3.resource('ec2')
+            instances = ec2.instances.filter(Filters=filters)
+
+            instanceTags = []
+            for instance in instances:
+                instanceId = instance.id
+                instanceJson = {'Id': instanceId}
+                for tags in instance.tags:
+                    instanceJson[tags["Key"]] = tags["Value"]
+                instanceTags.append(instanceJson)
+        except (botocore.exceptions.NoRegionError, botocore.exceptions.ClientError) as e:
+            print("Please configure the environment for AWS access: %s" % str(e))
+            sys.exit(1)
 
         instanceTags.sort(key=lambda x: x["Name"])
 
