@@ -9,10 +9,12 @@
 # var:index_dir
 # var:analytics_dir
 # var:eventing_dir
-# var:query
+# var:sql_query
 # var:domain
 # var:services
 # var:user_name
+# var:memopt
+# var:region
 #
 - name: Create Couchbase Cluster
   hosts: all

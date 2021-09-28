@@ -25,6 +25,8 @@
   when: '"index" in service_list'
 - set_fact:
     data_mem: "{{ (host_mem|int * 0.65) | round | int }}"
+- name: Get Services
+  include: lookup.yml
 - name: Initialize Cluster
   include: init.yml
 - name: Add Nodes to Cluster

@@ -14,4 +14,4 @@
         -u {{ couchbase_user | default('Administrator') }} \
         -p '{{ couchbase_pass | default('password') }}' \
         --script='{{ query_text }}'
-  when: inventory_hostname == first_host
+  when: inventory_hostname == first_host and query_text|length != 0

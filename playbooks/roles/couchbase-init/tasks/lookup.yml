@@ -1,0 +1,17 @@
+---
+# Lookup instance
+- name: Get AWS Instance Configuration
+  vars:
+    ansible_become: false
+  ec2_instance_info:
+    filters:
+      "tag:Name": "{{ inventory_hostname }}"
+      instance-state-name: ["running"]
+    region: "{{ cloud_region }}"
+  register: ec2_instance_info
+  delegate_to: localhost
+  retries: 3
+- set_fact:
+    host_services: "{{ ec2_instance_info.instances[0].tags.Services }}"
+- set_fact:
+    service_list: "{{ host_services.split(',') }}"

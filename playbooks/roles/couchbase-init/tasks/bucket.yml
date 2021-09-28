@@ -31,4 +31,4 @@
           --enable-index-replica {{ bucket_enable_index_replica | default(false) | int }} \
           --wait
         fi
-  when: first_host == inventory_hostname
+  when: first_host == inventory_hostname and create_bucket|bool == true

@@ -17,11 +17,13 @@ class dynamicInventory(object):
 
     def __init__(self):
         self.inventory = {}
-        self.labId = os.environ['LAB_ID']
 
         self.parse_args()
 
-        if self.args.list:
+        if "LAB_ID" not in os.environ:
+             self.inventory = self.empty_inventory()
+        elif self.args.list:
+            self.labId = os.environ['LAB_ID']
             self.inventory = self.lab_inventory()
         elif self.args.host:
             self.inventory = self.empty_hostvars()
@@ -91,6 +93,12 @@ class dynamicInventory(object):
     def empty_hostvars(self):
         return {'_meta': {'hostvars': {}}}
 
+    def empty_inventory(self):
+        inventoryJson = {}
+        inventoryJson['lab'] = {"hosts": [], "vars": {}}
+        inventoryJson['_meta'] = {"hostvars": {}}
+        return inventoryJson
+
     def parse_args(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('--list', action = 'store_true')
@@ -98,11 +106,7 @@ class dynamicInventory(object):
         self.args = parser.parse_args()
 
 def main():
-    if "LAB_ID" in os.environ:
-        dynamicInventory()
-    else:
-        print("Please set LAB_ID environment variable before running this script.")
-        sys.exit(1)
+    dynamicInventory()
 
 if __name__ == '__main__':
 
