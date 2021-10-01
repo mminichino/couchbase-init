@@ -27,6 +27,7 @@
     data_mem: "{{ (host_mem|int * 0.65) | round | int }}"
 - name: Get Services
   include: lookup.yml
+  when: cloud_type == 'aws'
 - name: Initialize Cluster
   include: init.yml
 - name: Add Nodes to Cluster
