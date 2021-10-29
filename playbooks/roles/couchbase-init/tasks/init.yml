@@ -2,7 +2,7 @@
 # tasks file for couchbase-init
 - set_fact:
     host_fqdn: "{{ inventory_hostname }}.{{ domain_name }}"
-  when: domain_name is defined
+  when: domain_name is defined and '.' not in inventory_hostname
   run_once: true
 - set_fact:
     rally_point_hostname: "{% if host_fqdn is defined %}{{ host_fqdn }}{% else %}{{ inventory_hostname }}{% endif %}"
