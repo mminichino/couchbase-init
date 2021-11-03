@@ -8,21 +8,16 @@
 - set_fact:
     host_mem: "{{ host_mem|int - 256 }}"
     eventing_mem: 256
-  when: '"eventing" in service_list'
 - set_fact:
     analytics_mem: "{{ (host_mem|int * 0.2) | round | int }}"
-  when: '"analytics" in service_list'
 - set_fact:
     host_mem: "{{ host_mem|int - analytics_mem|int }}"
-  when: '"analytics" in service_list'
 - set_fact:
     host_mem: "{{ host_mem|int - 512 }}" 
     fts_mem: 512
-  when: '"fts" in service_list'
 - set_fact:
     host_mem: "{{ host_mem|int - 768 }}"
     index_mem: 768
-  when: '"index" in service_list'
 - set_fact:
     data_mem: "{{ (host_mem|int * 0.65) | round | int }}"
 - name: Get Services
